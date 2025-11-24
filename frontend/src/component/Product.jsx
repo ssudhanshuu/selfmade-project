@@ -2,103 +2,110 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Api = import.meta.env.VITE_API_URL; 
+const Api = import.meta.env.VITE_API_URL;
 
 export default function Product() {
   const navigate = useNavigate();
-  const [productData, setProductData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [products, setProducts] = useState([]);
+  const [childs, setChilds] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
+    if (!token) return navigate("/login");
+
+    axios
+      .get(`${Api}/api/products`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setProducts(res.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  const fetchChildProducts = async (productId) => {
+    try {
+      const res = await axios.get(`${Api}/api/childproduct/${productId}`);
+      setSelectedProduct(productId);
+      setChilds(res.data.data);
+    } catch (error) {
+      console.log(error);
     }
-
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get(`${Api}/api/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProductData(res.data);
-      } catch (err) {
-        console.log(err);
-        setError(err.response?.data?.message || "Something went wrong!");
-
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [navigate]);
-
-
-  if (loading) {
-    return (
-      <div className="h-screen flex justify-center items-center text-xl font-semibold">
-        Loading products...
-      </div>
-    );
-  }
-
-
-  if (error) {
-    return (
-      <div className="h-screen flex justify-center items-center text-xl font-semibold text-red-600">
-        {error}
-      </div>
-    );
-  }
-
- 
-  if (productData.length === 0) {
-    return (
-      <div className="h-screen flex justify-center items-center text-xl font-semibold">
-        No products found
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="bg-gray-300 h-screen w-full flex fixed justify-center items-center overflow-hidden">
-      <table className="bg-white shadow-xl rounded-lg border border-gray-300">
+    <div className="p-6">
+    
+      <h1 className="text-2xl font-bold mb-4">All Products</h1>
+      <table className="bg-white shadow-lg rounded mb-8">
         <thead>
-          <tr className="font-bold bg-gray-200 text-black">
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Price</th>
-            <th className="px-4 py-2">Description</th>
-            <th className="px-4 py-2">Category</th>
-            <th className="px-4 py-2">Image</th>
+          <tr className="bg-gray-200 font-semibold">
+            <th className="p-2">Name</th>
+            <th className="p-2">Price</th>
+            <th className="p-2">Brand</th>
+            <th className="p-2">Image</th>
+            <th className="p-2">Action</th>
           </tr>
         </thead>
         <tbody>
-        
-  {productData.map((item, index) => (
-    <tr key={index} className="text-center border-b">
-      <td className="px-4 py-2">{item.name}</td>
-      <td className="px-4 py-2">₹{item.price}</td>
-      <td className="px-4 py-2">{item.description}</td>
-      <td className="px-4 py-2">{item.category}</td>
-      <td className="px-4 py-2">
-        <img
-          src={`${Api}/${item.image}`}
-          alt="product"
-          className="w-16 h-16 object-cover rounded"
-        />
-      </td>
-    </tr>
-  ))}
-</tbody>
-
-        
+          {products.map((p) => (
+            <tr key={p._id} className="text-center border-b">
+              <td className="p-2">{p.name}</td>
+              <td className="p-2">₹{p.price}</td>
+              <td className="p-2">{p.brand}</td>
+              <td className="p-2">
+                <img
+                  src={`${Api}/${p.image}`}
+                  className="w-14 h-14 rounded object-cover"
+                />
+              </td>
+              <td className="p-2">
+                <button
+                  onClick={() => fetchChildProducts(p._id)}
+                  className="bg-blue-600 text-white px-4 py-1 rounded"
+                >
+                  View Childs
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
+
+      
+      {selectedProduct && (
+        <>
+          <h2 className="text-xl font-bold mb-3">Child Products</h2>
+          {childs.length === 0 ? (
+            <p className="text-gray-500">No child product found</p>
+          ) : (
+            <table className="bg-white shadow-lg rounded">
+              <thead>
+                <tr className="bg-gray-200 font-semibold">
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Price</th>
+                  <th className="p-2">Brand</th>
+                  <th className="p-2">Image</th>
+                </tr>
+              </thead>
+              <tbody>
+                {childs.map((c) => (
+                  <tr key={c._id} className="text-center border-b">
+                    <td className="p-2">{c.name}</td>
+                    <td className="p-2">₹{c.price}</td>
+                    <td className="p-2">{c.brand}</td>
+                    <td className="p-2">
+                      <img
+                        src={`${Api}/${c.image}`}
+                        className="w-14 h-14 rounded object-cover"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
     </div>
   );
 }
