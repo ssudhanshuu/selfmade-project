@@ -26,14 +26,50 @@ exports.createProduct = async (req, res) => {
   }
 };
 
+
+
+
+
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const total = await Product.countDocuments();
+    const totalPages = Math.ceil(total / limit);
+
+   
+    if (page > totalPages && totalPages !== 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Page not found"
+      });
+    }
+
+    const products = await Product.find()
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      total,
+      page,
+      limit,
+      products,
+      totalPages,
+      isLastPage: page >= totalPages
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
+
+
+
 
 exports.getProductById = async (req, res) => {
   try {
@@ -46,6 +82,15 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
 
 exports.updateProduct = async (req, res) => {
   try {
