@@ -21,13 +21,11 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await axios.post(`${Api}/api/user/login`, formData);
-      
+
       alert("Login Successfully");
       console.log("Response:", res.data);
-       localStorage.setItem("token", res.data.token);
-       navigate('/product')
-        
-
+      localStorage.setItem("token", res.data.token);
+      navigate("/product");
     } catch (error) {
       alert(error.response?.data?.message || "Something went wrong");
       console.log(error);
@@ -38,7 +36,9 @@ export default function Login() {
     <div className="bg-gray-300 h-screen w-full flex fixed justify-center items-center overflow-hidden">
       <div className="bg-green-400 h-[400px] w-[400px] flex justify-center items-center rounded-xl shadow-xl transition-all duration-200 hover:shadow-xl hover:-translate-1">
         <form className="flex flex-col gap-6 p-10" onSubmit={SubmitHandler}>
-          <label htmlFor="email" className="font-semibold">Email</label>
+          <label htmlFor="email" className="font-semibold">
+            Email
+          </label>
           <input
             type="email"
             name="email"
@@ -48,7 +48,9 @@ export default function Login() {
             placeholder="Enter your email"
           />
 
-          <label htmlFor="password" className="font-semibold">Password</label>
+          <label htmlFor="password" className="font-semibold">
+            Password
+          </label>
           <input
             type="password"
             name="password"
@@ -64,8 +66,16 @@ export default function Login() {
           >
             Login
           </button>
+            <p
+          className="text-blue-900 cursor-pointer underline text-center"
+          onClick={() => navigate("/forgot-password")}
+        >
+          Forgot Password?
+        </p>
         </form>
+      
       </div>
+      
     </div>
   );
 }

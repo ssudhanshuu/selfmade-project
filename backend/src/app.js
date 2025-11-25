@@ -6,7 +6,7 @@ const productRouter = require("./routes/producatRouters");
 const userRouter = require("./routes/userRouter");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const childProductrouter = require("./routes/childProductRouter");
-
+const router = require("./routes/authRoutes")
 const app = express();
 
 app.use(cors());
@@ -18,6 +18,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 app.use("/api/products", productRouter);
 app.use("/api/user", userRouter);
 app.use("/api/childproduct",childProductrouter)
+app.use("/api",router)
 
 app.use(errorMiddleware);
 
